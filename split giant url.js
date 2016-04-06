@@ -20,7 +20,7 @@ while (overallIndex < totalBookCount) {
 
 
     while (currentNumBooks < maxBooks) {
-        if(overallIndex > totalBookCount) break;
+        if (overallIndex > totalBookCount) break;
         currentUrl += arr[overallIndex] + "%2C";
 
         currentNumBooks++;
