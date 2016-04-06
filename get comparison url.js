@@ -1,5 +1,7 @@
 "use strict";
 
+var url = "http://ucsc.verbacompare.com/comparison?id=";
+
 // http://stackoverflow.com/a/24026594
 function triggerMouseEvent(node, eventType) {
     var clickEvent = document.createEvent('MouseEvents');
@@ -16,27 +18,19 @@ function simulateClick(targetNode) {
 simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load options
 simulateClick($("div#term li")[1]); // click on "SPRING 2016"
 
-// now the department menu loads
-
-window.setTimeout(chooseDept, 500);
+window.setTimeout(chooseDept, 500); // wait for department menu to load
 
 function chooseDept() {
-
     simulateClick($("div#department span")[0]); // click on "Choose a Department..." to load options
     simulateClick($("div#department li")[3]); //click on "ANTH"
+
+    window.setTimeout(addCoursesToUrl, 500);
 }
 
 
-////////////////////////////////////////////////////////
+function addCoursesToUrl() {
 
-function $() {
-}
-
-var url = "http://ucsc.verbacompare.com/comparison?id=";
-
-function add() {
-
-    var opts = document.getElementById("course").getElementsByTagName("option");
+    var opts = $$("div#course option");
     var numBooks = 0;
 
     var currentOpt;
@@ -49,10 +43,12 @@ function add() {
     var dept = document.getElementById("department").getElementsByClassName("chosen-single")[0].children[0].innerHTML;
 
     console.info("Added " + numBooks + " from " + dept + ".");
+    console.info(url);
 }
 
-function loadUrl() {
-    window.location.href = url;
-    return url;
-}
 
+
+////////// END //////////////
+function $() {
+}
+function $$(){}
