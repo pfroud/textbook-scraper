@@ -1,13 +1,12 @@
 "use strict";
 
-var url = "http://ucsc.verbacompare.com/comparison?id=";
-
 // http://stackoverflow.com/a/24026594
 function triggerMouseEvent(node, eventType) {
     var clickEvent = document.createEvent('MouseEvents');
     clickEvent.initEvent(eventType, true, true);
     node.dispatchEvent(clickEvent);
 }
+// http://stackoverflow.com/a/24026594
 function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "mouseover");
     triggerMouseEvent(targetNode, "mousedown");
@@ -15,23 +14,39 @@ function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "click");
 }
 
+var url = "http://ucsc.verbacompare.com/comparison?id=";
+
 simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load options
 simulateClick($("div#term li")[1]); // click on "SPRING 2016"
 
 window.setTimeout(chooseDept, 500); // wait for department menu to load
 
+
 function chooseDept() {
     simulateClick($("div#department span")[0]); // click on "Choose a Department..." to load options
-    simulateClick($("div#department li")[3]); //click on "ANTH"
 
-    window.setTimeout(addCoursesToUrl, 500);
+    var allDepts = $$("div#department li").slice(1); //takes off "Choose a Department..."
+
+    recur(allDepts);
+
 }
 
+function recur(allDepts) {
 
-function addCoursesToUrl() {
+    if (allDepts.length == 0){
+        printUrl(url);
+        return;
+    }
 
-    var opts = $$("div#course option");
+    var currentDept = allDepts.shift();
+    simulateClick(currentDept);
+    window.setTimeout(addCoursesToUrl, 700, allDepts, url);
+}
+
+function addCoursesToUrl(allDepts) {
+    var opts = $("div#course option");
     var numBooks = 0;
+
 
     var currentOpt;
     for (var i = 1; i < opts.length; i++) {
@@ -42,13 +57,59 @@ function addCoursesToUrl() {
 
     var dept = document.getElementById("department").getElementsByClassName("chosen-single")[0].children[0].innerHTML;
 
-    console.info("Added " + numBooks + " from " + dept + ".");
-    console.info(url);
+    if(numBooks == 0){
+        console.warn("Added " + numBooks + " from " + dept + ".");
+    } else {
+        console.log("Added " + numBooks + " from " + dept + ".");
+    }
+
+
+
+    recur(allDepts);
 }
 
+function printUrl() {
 
-
-////////// END //////////////
-function $() {
+    var split = splitUrl(url);
+    var currentUrl;
+    for (var i = 0; i < split.length; i++) {
+        currentUrl = split[i];
+        document.write("<p><a href=\"" + currentUrl + "\">thing</a></p>");
+    }
 }
-function $$(){}
+
+function splitUrl() {
+    var arr = url.split("=")[1].split("%2C");
+
+    if(arr[arr.length-1] == ""){
+        arr = arr.slice(0, -1);
+    }
+
+    var totalBookCount = arr.length;
+    const urlBase = "http://ucsc.verbacompare.com/comparison?id=";
+    const maxBooksPerUrl = 350;
+
+    var urlArray = [];
+
+    var overallIndex = 0;
+    var currentNumBooks, currentUrl;
+
+    while (overallIndex < totalBookCount) {
+        currentNumBooks = 0;
+        currentUrl = urlBase;
+
+        while (currentNumBooks < maxBooksPerUrl) {
+            if (overallIndex >= totalBookCount) break;
+            currentUrl += arr[overallIndex] + "%2C";
+
+            currentNumBooks++;
+            overallIndex++;
+        }
+        urlArray.push(currentUrl);
+
+        console.info("added", currentNumBooks, "books to index", urlArray.length + ". Overall index is", overallIndex);
+    }
+    console.info("Done. overallIndex is", overallIndex, "and totalBookCount is", totalBookCount, ". Array length is", urlArray.length);
+
+    return urlArray;
+}
