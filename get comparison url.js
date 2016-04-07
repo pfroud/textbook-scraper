@@ -14,6 +14,7 @@ function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "click");
 }
 
+// TODO use an array
 var url = "http://ucsc.verbacompare.com/comparison?id=";
 
 simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load options
@@ -31,19 +32,26 @@ function chooseDept() {
 
 }
 
+var mutObs = new MutationObserver(addCoursesToUrl(allDepts));
+var mutObsConfig = {characterData: true, subtree: true};
+var mutObsTarget = $("div#course a.chosen-single span")[0];
+
 function recur(allDepts) {
 
-    if (allDepts.length == 0){
+    if (allDepts.length == 0) {
         printUrl(url);
         return;
     }
 
     var currentDept = allDepts.shift();
     simulateClick(currentDept);
-    window.setTimeout(addCoursesToUrl, 700, allDepts, url);
+    // window.setTimeout(addCoursesToUrl, 3000, allDepts, url); //this timeout delay is arbitrary and shitty
+    mutObs.observe(mutObsTarget, mutObsConfig);
 }
 
 function addCoursesToUrl(allDepts) {
+    mutObs.disconnect();
+
     var opts = $("div#course option");
     var numBooks = 0;
 
@@ -57,12 +65,11 @@ function addCoursesToUrl(allDepts) {
 
     var dept = document.getElementById("department").getElementsByClassName("chosen-single")[0].children[0].innerHTML;
 
-    if(numBooks == 0){
+    if (numBooks == 0) {
         console.warn("Added " + numBooks + " from " + dept + ".");
     } else {
         console.log("Added " + numBooks + " from " + dept + ".");
     }
-
 
 
     recur(allDepts);
@@ -78,10 +85,11 @@ function printUrl() {
     }
 }
 
+// TODO make this not suck
 function splitUrl() {
     var arr = url.split("=")[1].split("%2C");
 
-    if(arr[arr.length-1] == ""){
+    if (arr[arr.length - 1] == "") {
         arr = arr.slice(0, -1);
     }
 
