@@ -1,8 +1,7 @@
 "use strict";
 
 function readInfo() {
-    var items = document.getElementsByClassName("item_details");
-
+    var items = $$("div.item_details");
 
     var currentItem, infoTable, infoCells;
     var numBooks = 0;
@@ -13,16 +12,17 @@ function readInfo() {
         numBooks++;
 
         //SECTION
-        csv += "\"" + currentItem.getElementsByClassName("in_section")[0].getElementsByTagName("span")[0].innerHTML + "\",";
+        csv += "\"" + currentItem.querySelector("div.in_section span").innerHTML + "\",";
 
 
-        infoTable = currentItem.getElementsByClassName("book_info")[0];
+        // infoTable = currentItem.getElementsByClassName("book_info")[0];
+        infoTable = currentItem.querySelector("td.book_info");
 
 
         //TITLE
-        csv += "\"" + infoTable.getElementsByClassName("title")[0].innerHTML.trim() + "\",";
+        csv += "\"" + infoTable.querySelector("td.title").innerHTML.trim() + "\",";
 
-        infoCells = infoTable.getElementsByClassName("info");
+        infoCells = infoTable.querySelectorAll("td.info");
 
         //AUTHOR
         csv += "\"" + infoCells[0].innerHTML + "\",";
@@ -34,22 +34,19 @@ function readInfo() {
         csv += "\"" + infoCells[2].innerHTML + "\"\n";
     }
 
-
-    var noBooks = document.getElementsByClassName("section no_books");
+    // the class is "section no_books" - http://stackoverflow.com/a/6885027
+    var noBooks = document.querySelectorAll("div.section.no_books");
 
     var lenWith = items.length;
     var lenWithout = noBooks.length;
-    console.info(lenWith + " books with info, " + lenWithout + +" books without info, " + (lenWith + lenWithout) + " total.");
+    console.info(lenWith + " books with info, " + lenWithout + " books without info, " + (lenWith + lenWithout) + " total.");
 
-
-    for (var i = 0; i < noBooks.length; i++) {
+    for (i = 0; i < noBooks.length; i++) {
         currentItem = noBooks[i];
-
-        csv += "\"" + currentItem.getElementsByTagName("h3")[0].innerHTML + "\",\"No info.\",\"-\",\"-\",\"-\"\n";
-
-
+        csv += "\"" + currentItem.querySelector("h3").innerHTML + "\",\"No info.\",\"-\",\"-\",\"-\"\n";
     }
-
 
     return csv;
 }
+
+readInfo();
