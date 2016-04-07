@@ -14,6 +14,10 @@ function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "click");
 }
 
+var mutObs;
+var mutObsConfig = {characterData: true, subtree: true};
+var mutObsTarget = $("div#course a.chosen-single span")[0];
+
 // TODO use an array
 var url = "http://ucsc.verbacompare.com/comparison?id=";
 
@@ -25,19 +29,12 @@ window.setTimeout(chooseDept, 500); // wait for department menu to load
 
 function chooseDept() {
     simulateClick($("div#department span")[0]); // click on "Choose a Department..." to load options
-
     var allDepts = $$("div#department li").slice(1); //takes off "Choose a Department..."
-
     recur(allDepts);
-
 }
 
-var mutObs = new MutationObserver(addCoursesToUrl(allDepts));
-var mutObsConfig = {characterData: true, subtree: true};
-var mutObsTarget = $("div#course a.chosen-single span")[0];
 
 function recur(allDepts) {
-
     if (allDepts.length == 0) {
         printUrl(url);
         return;
@@ -45,7 +42,8 @@ function recur(allDepts) {
 
     var currentDept = allDepts.shift();
     simulateClick(currentDept);
-    // window.setTimeout(addCoursesToUrl, 3000, allDepts, url); //this timeout delay is arbitrary and shitty
+
+    mutObs = new MutationObserver(function(){addCoursesToUrl(allDepts)});
     mutObs.observe(mutObsTarget, mutObsConfig);
 }
 
@@ -54,7 +52,6 @@ function addCoursesToUrl(allDepts) {
 
     var opts = $("div#course option");
     var numBooks = 0;
-
 
     var currentOpt;
     for (var i = 1; i < opts.length; i++) {
