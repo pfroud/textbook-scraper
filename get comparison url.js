@@ -6,7 +6,6 @@ function triggerMouseEvent(node, eventType) {
     clickEvent.initEvent(eventType, true, true);
     node.dispatchEvent(clickEvent);
 }
-// http://stackoverflow.com/a/24026594
 function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "mouseover");
     triggerMouseEvent(targetNode, "mousedown");
@@ -18,12 +17,12 @@ var mutObs;
 var mutObsConfig = {characterData: true, subtree: true};
 var mutObsTarget = $("div#course a.chosen-single span")[0];
 
-// TODO use an array
-var url = "http://ucsc.verbacompare.com/comparison?id=";
+var courseIDs = [];
 
 simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load options
 simulateClick($("div#term li")[1]); // click on "SPRING 2016"
 
+// TODO use MutationObserver instead of timeout
 window.setTimeout(chooseDept, 500); // wait for department menu to load
 
 
@@ -36,14 +35,16 @@ function chooseDept() {
 
 function recur(allDepts) {
     if (allDepts.length == 0) {
-        printUrl(url);
+        printUrls();
         return;
     }
 
     var currentDept = allDepts.shift();
     simulateClick(currentDept);
 
-    mutObs = new MutationObserver(function(){addCoursesToUrl(allDepts)});
+    mutObs = new MutationObserver(function () {
+        addCoursesToUrl(allDepts)
+    });
     mutObs.observe(mutObsTarget, mutObsConfig);
 }
 
@@ -56,7 +57,8 @@ function addCoursesToUrl(allDepts) {
     var currentOpt;
     for (var i = 1; i < opts.length; i++) {
         currentOpt = opts[i];
-        url += currentOpt.value + "__01%2C";
+        // url += currentOpt.value + "__01%2C";
+        courseIDs.push(currentOpt.value);
         numBooks++;
     }
 
@@ -72,49 +74,23 @@ function addCoursesToUrl(allDepts) {
     recur(allDepts);
 }
 
-function printUrl() {
 
-    var split = splitUrl(url);
-    var currentUrl;
-    for (var i = 0; i < split.length; i++) {
-        currentUrl = split[i];
-        document.write("<p><a href=\"" + currentUrl + "\">thing</a></p>");
-    }
-}
-
-// TODO make this not suck
-function splitUrl() {
-    var arr = url.split("=")[1].split("%2C");
-
-    if (arr[arr.length - 1] == "") {
-        arr = arr.slice(0, -1);
-    }
-
-    var totalBookCount = arr.length;
-    const urlBase = "http://ucsc.verbacompare.com/comparison?id=";
+function printUrls() {
     const maxBooksPerUrl = 350;
 
-    var urlArray = [];
+    document.write("<body style=\"font-size:5em;font-family:sans-serif\">");
 
-    var overallIndex = 0;
-    var currentNumBooks, currentUrl;
+    var numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
-    while (overallIndex < totalBookCount) {
-        currentNumBooks = 0;
-        currentUrl = urlBase;
 
-        while (currentNumBooks < maxBooksPerUrl) {
-            if (overallIndex >= totalBookCount) break;
-            currentUrl += arr[overallIndex] + "%2C";
+    var sliced, currentUrl;
+    for (var i = 0; i < numLinks; i++) {
 
-            currentNumBooks++;
-            overallIndex++;
-        }
-        urlArray.push(currentUrl);
+        sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
 
-        console.info("added", currentNumBooks, "books to index", urlArray.length + ". Overall index is", overallIndex);
+        currentUrl = "http://ucsc.verbacompare.com/comparison?id=";
+        currentUrl += sliced.join("__01%2C");
+        document.write("<p><a href=\"" + currentUrl + "\">link " + (i + 1) + " of " + numLinks + "</a></p>");
+
     }
-    console.info("Done. overallIndex is", overallIndex, "and totalBookCount is", totalBookCount, ". Array length is", urlArray.length);
-
-    return urlArray;
 }
