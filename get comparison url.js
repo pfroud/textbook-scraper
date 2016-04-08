@@ -106,8 +106,6 @@ function updateCount(num, total) {
 function watchStorageUpdate(numLinks) {
     // http://stackoverflow.com/a/2010994
 
-    var numLinks = 2;
-
     Storage.prototype.setObject = function (key, value) {
         this.setItem(key, JSON.stringify(value));
     };
@@ -122,7 +120,8 @@ function watchStorageUpdate(numLinks) {
             document.write("got all " + numLinks + " things!");
 
             document.body.innerHTML = "";
-            document.write("<pre>\n\"Section\",\"Title\",\"Author\",\"ISBN\",\"Status\"\n");
+            document.writeln("<pre>");
+            document.writeln("\"Dept\"\",\"\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
 
             for (var i = 0; i < len; i++) {
                 document.write(arrayOfCSVs[i]);
