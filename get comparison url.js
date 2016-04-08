@@ -13,20 +13,25 @@ function simulateClick(targetNode) {
     triggerMouseEvent(targetNode, "click");
 }
 
-var mutObs;
+var mutObs_dept;
+var mutObs_course;
+var mutObs_course_target = $("div#course a.chosen-single span")[0];
 var mutObsConfig = {characterData: true, subtree: true};
-var mutObsTarget = $("div#course a.chosen-single span")[0];
+
 
 var courseIDs = [];
 
 simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load options
 simulateClick($("div#term li")[1]); // click on "SPRING 2016"
 
-// TODO use MutationObserver instead of timeout
-window.setTimeout(chooseDept, 500); // wait for department menu to load
+mutObs_dept = new MutationObserver(function () {
+    chooseDept();
+});
+mutObs_dept.observe($("div#department a.chosen-single span")[0], mutObsConfig);
 
 
 function chooseDept() {
+    mutObs_dept.disconnect();
     simulateClick($("div#department span")[0]); // click on "Choose a Department..." to load options
     var allDepts = $$("div#department li").slice(1); //takes off "Choose a Department..."
     recur(allDepts);
@@ -42,35 +47,28 @@ function recur(allDepts) {
     var currentDept = allDepts.shift();
     simulateClick(currentDept);
 
-    mutObs = new MutationObserver(function () {
+    mutObs_course = new MutationObserver(function () {
         addCoursesToUrl(allDepts)
     });
-    mutObs.observe(mutObsTarget, mutObsConfig);
+    mutObs_course.observe(mutObs_course_target, mutObsConfig);
 }
 
 function addCoursesToUrl(allDepts) {
-    mutObs.disconnect();
+    mutObs_course.disconnect();
 
-    var opts = $("div#course option");
+    var opts = $("div#eset option");
     var numBooks = 0;
 
     var currentOpt;
-    for (var i = 1; i < opts.length; i++) {
+    for (var i = 1; i < opts.length; i++) { //start at 1 to skip "Choose a Section..."
         currentOpt = opts[i];
-        // url += currentOpt.value + "__01%2C";
         courseIDs.push(currentOpt.value);
         numBooks++;
     }
 
     var dept = document.getElementById("department").getElementsByClassName("chosen-single")[0].children[0].innerHTML;
 
-    if (numBooks == 0) {
-        console.warn("Added " + numBooks + " from " + dept + ".");
-    } else {
-        // console.log("Added " + numBooks + " from " + dept + ".");
-    }
-
-
+    if (numBooks == 0) console.warn(dept + "didn't work");
     recur(allDepts);
 }
 
@@ -82,14 +80,13 @@ function printUrls() {
 
     var numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
-
     var sliced, currentUrl;
     for (var i = 0; i < numLinks; i++) {
 
         sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
 
         currentUrl = "http://ucsc.verbacompare.com/comparison?id=";
-        currentUrl += sliced.join("__01%2C");
+        currentUrl += sliced.join();
         document.write("<p><a href=\"" + currentUrl + "\">link " + (i + 1) + " of " + numLinks + "</a></p>");
     }
 

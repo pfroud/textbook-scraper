@@ -80,7 +80,6 @@ function addCsvClassInfo(classInfoString) {
     } else {
         addCsvString("-"); //professor
     }
-
 }
 
 function writeToStorage(csvToAdd) {
@@ -93,7 +92,6 @@ function writeToStorage(csvToAdd) {
         return JSON.parse(this.getItem(key));
     };
 
-
     var existingCsv = localStorage.getObject("csv");
     if (existingCsv == null) {
         localStorage.setObject("csv", [csvToAdd]);
@@ -102,7 +100,6 @@ function writeToStorage(csvToAdd) {
     var newCsv = existingCsv;
     newCsv.push(csvToAdd);
     localStorage.setObject("csv", newCsv);
-
 }
 
 readInfo();
