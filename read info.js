@@ -5,7 +5,6 @@ var csv = "";
 function readInfo() {
     var items = $$("div.item_details");
 
-    var basics, split_classInfo, split_dept_courseNum, split_secNum_prof;
     var currentItem, infoTable, infoCells;
     var numBooks = 0;
 
@@ -14,42 +13,23 @@ function readInfo() {
         numBooks++;
 
         // CLASS INFO - DEPARTMENT, COURSE NUMBER, SECTION NUMBER, PROFESSOR
-        basics = currentItem.querySelector("div.in_section span").innerHTML;
-        /* e.g. "ANTH 102A (01 - RETI)"
-         * or   "ANTH 100 (01)"      */
-
-        split_classInfo = basics.split("(");
-        /* e.g. ["ANTH 102A ", "01 - RETI)"]
-         * or   ["ANTH 100 " , "01)"       ] */
-
-        split_dept_courseNum = split_classInfo[0].split(" ");
-        /* e.g. ["ANTH", "102A", ""]
-         * or   ["ANTH", "100", "" ] */
-        addCsv(split_dept_courseNum[0]); //department
-        addCsv(split_dept_courseNum[1]); //course number
-
-        split_secNum_prof = split_classInfo[1].split(" - ");
-        /* e.g. ["01", "RETI)"]
-         * or   ["01)"        ] */
-        addCsv(split_secNum_prof[0].replace(/\)$/, "")); //section number
-        addCsv(split_secNum_prof[1].replace(/\)$/, "")); //professor
-
+        addCsvClassInfo(currentItem.querySelector("div.in_section span").innerHTML);
 
         infoTable = currentItem.querySelector("td.book_info");
 
         //TITLE
-        addCsv(infoTable.querySelector("td.title").innerHTML.trim());
+        addCsvString(infoTable.querySelector("td.title").innerHTML.trim());
 
         infoCells = infoTable.querySelectorAll("td.info");
 
         //AUTHOR
-        addCsv(infoCells[0].innerHTML);
+        addCsvString(infoCells[0].innerHTML);
 
         //ISBN
-        addCsv(infoCells[1].innerHTML);
+        addCsvString(infoCells[1].innerHTML);
 
         //STATUS
-        addCsv(infoCells[2].innerHTML);
+        addCsvString(infoCells[2].innerHTML);
         csv += "\n";
     }
 
@@ -62,14 +42,45 @@ function readInfo() {
 
     for (i = 0; i < noBooks.length; i++) {
         currentItem = noBooks[i];
-        csv += "\"" + currentItem.querySelector("h3").innerHTML + "\",\"No info.\",\"-\",\"-\",\"-\"\n";
+        addCsvClassInfo(currentItem.querySelector("h3").innerHTML);
+        csv += "\"No info.\",\"-\",\"-\",\"-\"\n";
     }
 
     writeToStorage(csv)
 }
 
-function addCsv(string) {
+function addCsvString(string) {
     csv += "\"" + string + "\",";
+}
+
+function addCsvClassInfo(classInfoString) {
+    var split_classInfo, split_dept_courseNum, split_secNum_prof;
+
+    /* parameter classInfoString is like this
+     * e.g. "ANTH 102A (01 - RETI)"
+     * or   "ANTH 100 (01)"      */
+
+    split_classInfo = classInfoString.split("(");
+    /* e.g. ["ANTH 102A ", "01 - RETI)"]
+     * or   ["ANTH 100 " , "01)"       ] */
+
+    split_dept_courseNum = split_classInfo[0].split(" ");
+    /* e.g. ["ANTH", "102A", ""]
+     * or   ["ANTH", "100", "" ] */
+    addCsvString(split_dept_courseNum[0]); //department
+    addCsvString(split_dept_courseNum[1]); //course number
+
+    split_secNum_prof = split_classInfo[1].split(" - ");
+    /* e.g. ["01", "RETI)"]
+     * or   ["01)"        ] */
+    addCsvString(split_secNum_prof[0].replace(/\)$/, "")); //section number
+
+    if (split_secNum_prof.length > 1) {
+        addCsvString(split_secNum_prof[1].replace(/\)$/, "")); //professor
+    } else {
+        addCsvString("-"); //professor
+    }
+
 }
 
 function writeToStorage(csvToAdd) {
