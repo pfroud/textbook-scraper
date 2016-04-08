@@ -5,7 +5,8 @@ function readInfo() {
 
     var currentItem, infoTable, infoCells;
     var numBooks = 0;
-    var csv = "Section,Title,Author,ISBN,Status\n";
+    // var csv = "Section,Title,Author,ISBN,Status\n";
+    var csv = "";
 
     for (var i = 0; i < items.length; i++) {
         currentItem = items[i];
@@ -15,9 +16,7 @@ function readInfo() {
         csv += "\"" + currentItem.querySelector("div.in_section span").innerHTML + "\",";
 
 
-        // infoTable = currentItem.getElementsByClassName("book_info")[0];
         infoTable = currentItem.querySelector("td.book_info");
-
 
         //TITLE
         csv += "\"" + infoTable.querySelector("td.title").innerHTML.trim() + "\",";
@@ -46,7 +45,29 @@ function readInfo() {
         csv += "\"" + currentItem.querySelector("h3").innerHTML + "\",\"No info.\",\"-\",\"-\",\"-\"\n";
     }
 
-    return csv;
+    writeToStorage(csv)
+}
+
+function writeToStorage(csvToAdd){
+
+    // http://stackoverflow.com/a/2010994
+    Storage.prototype.setObject = function (key, value) {
+        this.setItem(key, JSON.stringify(value));
+    };
+    Storage.prototype.getObject = function (key) {
+        return JSON.parse(this.getItem(key));
+    };
+
+
+    var existingCsv = localStorage.getObject("csv");
+    if (existingCsv == null){
+        localStorage.setObject("csv", [csvToAdd]);
+        return;
+    }
+    var newCsv = existingCsv;
+    newCsv.push(csvToAdd);
+    localStorage.setObject("csv", newCsv);
+
 }
 
 readInfo();

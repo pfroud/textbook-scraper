@@ -67,7 +67,7 @@ function addCoursesToUrl(allDepts) {
     if (numBooks == 0) {
         console.warn("Added " + numBooks + " from " + dept + ".");
     } else {
-        console.log("Added " + numBooks + " from " + dept + ".");
+        // console.log("Added " + numBooks + " from " + dept + ".");
     }
 
 
@@ -78,7 +78,7 @@ function addCoursesToUrl(allDepts) {
 function printUrls() {
     const maxBooksPerUrl = 350;
 
-    document.write("<body style=\"font-size:5em;font-family:sans-serif\">");
+    document.write("<body style=\"font-family:sans-serif\">");
 
     var numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
@@ -91,6 +91,48 @@ function printUrls() {
         currentUrl = "http://ucsc.verbacompare.com/comparison?id=";
         currentUrl += sliced.join("__01%2C");
         document.write("<p><a href=\"" + currentUrl + "\">link " + (i + 1) + " of " + numLinks + "</a></p>");
-
     }
+
+    document.write("<div id=\"count\"></div>");
+    updateCount(0, numLinks);
+
+    watchStorageUpdate(numLinks);
+}
+
+function updateCount(num, total) {
+    $("div#count")[0].innerHTML = "Found " + num + " of " + total + ".";
+}
+
+function watchStorageUpdate(numLinks) {
+    // http://stackoverflow.com/a/2010994
+
+    var numLinks = 2;
+
+    Storage.prototype.setObject = function (key, value) {
+        this.setItem(key, JSON.stringify(value));
+    };
+    Storage.prototype.getObject = function (key) {
+        return JSON.parse(this.getItem(key));
+    };
+
+    window.addEventListener('storage', function (e) {
+        var arrayOfCSVs = JSON.parse(e.newValue);
+        var len = arrayOfCSVs.length;
+        if (len == numLinks) {
+            document.write("got all " + numLinks + " things!");
+
+            document.body.innerHTML = "";
+            document.write("<pre>\n\"Section\",\"Title\",\"Author\",\"ISBN\",\"Status\"\n");
+
+            for (var i = 0; i < len; i++) {
+                document.write(arrayOfCSVs[i]);
+            }
+
+            document.write("</pre>");
+            localStorage.clear();
+        } else {
+            updateCount(len, numLinks);
+        }
+    });
+
 }
