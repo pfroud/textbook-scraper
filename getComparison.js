@@ -92,65 +92,68 @@ function addCoursesFromDept(allDepts) {
     getNextDept(allDepts);
 }
 
+var numLinksTotal; // global so storageCallback() can be removed
+
 /**
  * Prints links to open pages to compare the books.
  */
 function printLinks() {
     const maxBooksPerUrl = 350;
-    var numLinks         = Math.ceil(courseIDs.length / maxBooksPerUrl);
+    numLinksTotal        = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); //make font not terrible
 
     var sliced, currentUrl, linkText;
-    for (var i = 0; i < numLinks; i++) {
+    for (var i = 0; i < numLinksTotal; i++) {
 
         // takes non-overlapping slices of maxBooksPerUrl elements. (i+1)*maxBooksPerUrl doesn't work when i==0
         sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
 
         currentUrl = "http://ucsc.verbacompare.com/comparison?id=" + sliced.join();
-        linkText   = "Link " + (i + 1) + " of " + numLinks;
+        linkText   = "Link " + (i + 1) + " of " + numLinksTotal;
         document.write("<p><a href=\"" + currentUrl + "\">" + linkText + "</a></p>");
     }
     document.write("<div id=\"count\"></div>"); //content added by updateCount()
-    updateCount(0, numLinks);
-    watchStorageUpdate(numLinks);
+    updateCount(0, numLinksTotal);
+    // watchStorageUpdate(numLinksTotal);
+
+    window.addEventListener("storage", storageCallback);
+
 }
 
 /**
  * Updates the <div id="count"> to display "Found x of y."
  *
- * @param num how many results we currently have
- * @param total how many results total we expect
+ * @param numLinksCurrent how many results we currently have
  */
-function updateCount(num, total) {
-    $("div#count")[0].innerHTML = "Found " + num + " of " + total + ".";
+function updateCount(numLinksCurrent) {
+    $("div#count")[0].innerHTML = "Found " + numLinksCurrent + " of " + numLinksTotal + ".";
 }
 
 /**
- * Watches for results from the comparison pages to come in. Displays status message or the CSV if done.
+ * If we have all the results, display the CSV; otherwise, update the count.
  *
- * @param numLinks
+ * @param event StorageEvent from the event listener
  */
-function watchStorageUpdate(numLinks) {
-    window.addEventListener('storage', function (e) { //e is a StorageEvent
+function storageCallback(event) {
+    // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
+    var arrayOfCSVs = JSON.parse(event.newValue);
+    var len         = arrayOfCSVs.length;
 
-        // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
-        var arrayOfCSVs = JSON.parse(e.newValue);
-        var len         = arrayOfCSVs.length;
+    if (len == numLinksTotal) {
+        document.body.innerHTML = ""; // can't set this to "<pre>" because browser automatically closes the tag
+        document.write("<pre>");
 
-        if (len == numLinks) {
-            document.body.innerHTML = "<pre>"; //overwrites entire body
+        // CSV header and rows
+        document.writeln(
+            "\"Dept\",\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
+        for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
 
-            // CSV header and rows
-            document.writeln(
-                "\"Dept\",\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
-            for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
+        document.write("</pre>");
+        window.removeEventListener("storage", storageCallback);
+        localStorage.clear();
 
-            document.write("</pre>");
-            localStorage.clear();
-
-        } else {
-            updateCount(len, numLinks);
-        }
-    });
+    } else {
+        updateCount(len, numLinksTotal);
+    }
 }
