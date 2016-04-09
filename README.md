@@ -1,5 +1,9 @@
-# textbook-scraper
-Scrapes every book from http://ucsc.verbacompare.com to a CSV file.
+# UCSC bookstore textbook scraper
+
+Makes a CSV file of every book for every UCSC class, using the [Bay Tree Bookstore's](http://slugstore.ucsc.edu) online textbook lookup at http://ucsc.verbacompare.com.
+
+There are 967	books in the [sample output](sample-output.csv), 759 of which have information listed. Two columns to the right aren't shown in the default view on the GitHub viewer, but you can scroll horozintally.
+
 
 ## How to use
 
@@ -10,3 +14,6 @@ Scrapes every book from http://ucsc.verbacompare.com to a CSV file.
 1. After each time, you can check the results page to see if it has seen the new result.
 1. Once you've run `readComparison` on each page, return to the results page. It should now have a CSV file.
 1. Save / paste into a spreadsheet program.
+
+## Known bugs & future work
+* Only looks for section 01, which is the only option for almost every class.
