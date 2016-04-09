@@ -83,8 +83,7 @@ function addCsvClassInfo(classInfoString) {
 }
 
 function writeToStorage(csvToAdd) {
-
-    // http://stackoverflow.com/a/2010994
+    // These functions fake adding any object to Storage. http://stackoverflow.com/a/2010994
     Storage.prototype.setObject = function (key, value) {
         this.setItem(key, JSON.stringify(value));
     };
