@@ -24,7 +24,7 @@ function readInfo() {
         infoCells = infoTable.querySelectorAll("td.info"); // now these cells have everything else
         addCsvString(infoCells[0].innerHTML); //author
         addCsvString(infoCells[1].innerHTML); //ISBN
-        addCsvString(infoCells[2].innerHTML); //status
+        addCsvString(infoCells[2].innerHTML, true); //status
 
         csv += "\n";
     }
@@ -86,9 +86,11 @@ function addCsvClassInfo(classInfoString) {
  * Adds a string, surrounded by quotation marks, to the CSV.
  *
  * @param string the string to add to the CSV.
+ * @param last
  */
-function addCsvString(string) {
-    csv += "\"" + string + "\",";
+function addCsvString(string, last) {
+    csv += "\"" + string + "\"";
+    if(!last) csv += ",";
 }
 
 /**
