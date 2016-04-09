@@ -21,7 +21,7 @@ function simulateClick(targetNode) {
 var mutObs_dept;
 var mutObs_course;
 var mutObs_course_target = $("div#course a.chosen-single span")[0];
-var mutObsConfig = {characterData: true, subtree: true};
+var mutObsConfig         = {characterData: true, subtree: true};
 
 var courseIDs = []; // example course ID is "SP16__AMS__011A__01"
 
@@ -29,9 +29,7 @@ simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load ter
 simulateClick($("div#term li")[1]); // click on "SPRING 2016"
 
 //set up MutationObserver to call startGettingDepts() when triggered
-mutObs_dept = new MutationObserver(function () {
-    startGettingDepts();
-});
+mutObs_dept = new MutationObserver(function () { startGettingDepts();});
 
 // Wait for spinner to finish by watching for "Select an Option" to change into "Choose a Department..."
 // noinspection JSCheckFunctionSignatures - WebStorm shows incorrect warning about the config object
@@ -63,9 +61,8 @@ function getNextDept(allDepts) {
     simulateClick(allDepts.shift());
 
     //set up MutationObserver to call addCoursesFromDept() when triggered
-    mutObs_course = new MutationObserver(function () {
-        addCoursesFromDept(allDepts)
-    });
+    mutObs_course = new MutationObserver(function () { addCoursesFromDept(allDepts) });
+
     // Wait for spinner to finish by watching for "Select an Option" to change into "Choose a Course..."
     // noinspection JSCheckFunctionSignatures - WebStorm shows incorrect warning about the config object
     mutObs_course.observe(mutObs_course_target, mutObsConfig);
@@ -80,7 +77,7 @@ function addCoursesFromDept(allDepts) {
     mutObs_course.disconnect();
 
     // var options = $("div#eset option"); // need to wait for sections to load
-    var options = $("div#course option");
+    var options  = $("div#course option");
     var numBooks = 0;
     var currentOpt;
 
@@ -100,17 +97,18 @@ function addCoursesFromDept(allDepts) {
  */
 function printLinks() {
     const maxBooksPerUrl = 350;
-    var numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
+    var numLinks         = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); //make font not terrible
 
     var sliced, currentUrl, linkText;
     for (var i = 0; i < numLinks; i++) {
+
         // takes non-overlapping slices of maxBooksPerUrl elements. (i+1)*maxBooksPerUrl doesn't work when i==0
         sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
 
         currentUrl = "http://ucsc.verbacompare.com/comparison?id=" + sliced.join();
-        linkText = "Link " + (i + 1) + " of " + numLinks;
+        linkText   = "Link " + (i + 1) + " of " + numLinks;
         document.write("<p><a href=\"" + currentUrl + "\">" + linkText + "</a></p>");
     }
     document.write("<div id=\"count\"></div>"); //content added by updateCount()
@@ -138,17 +136,19 @@ function watchStorageUpdate(numLinks) {
 
         // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
         var arrayOfCSVs = JSON.parse(e.newValue);
-        var len = arrayOfCSVs.length;
+        var len         = arrayOfCSVs.length;
 
         if (len == numLinks) {
             document.body.innerHTML = "<pre>"; //overwrites entire body
 
             // CSV header and rows
-            document.writeln("\"Dept\",\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
+            document.writeln(
+                "\"Dept\",\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
             for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
 
             document.write("</pre>");
             localStorage.clear();
+
         } else {
             updateCount(len, numLinks);
         }

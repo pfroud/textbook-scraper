@@ -1,64 +1,63 @@
+/**
+ * Reads a page of comparisons and writes a CSV of the info to Storage.
+ */
 "use strict";
 
 var csv = "";
 
+/**
+ * Reads information about every book on the page, then adds the info as a CSV to Storage.
+ */
 function readInfo() {
     var items = $$("div.item_details");
-
     var currentItem, infoTable, infoCells;
-    var numBooks = 0;
 
     for (var i = 0; i < items.length; i++) {
         currentItem = items[i];
-        numBooks++;
 
-        // CLASS INFO - DEPARTMENT, COURSE NUMBER, SECTION NUMBER, PROFESSOR
+        // class info - department, course number, section number, professor
         addCsvClassInfo(currentItem.querySelector("div.in_section span").innerHTML);
 
-        infoTable = currentItem.querySelector("td.book_info");
+        infoTable = currentItem.querySelector("td.book_info"); // this table has everything else
+        addCsvString(infoTable.querySelector("td.title").innerHTML.trim()); //title
 
-        //TITLE
-        addCsvString(infoTable.querySelector("td.title").innerHTML.trim());
+        infoCells = infoTable.querySelectorAll("td.info"); // now these cells have everything else
+        addCsvString(infoCells[0].innerHTML); //author
+        addCsvString(infoCells[1].innerHTML); //ISBN
+        addCsvString(infoCells[2].innerHTML); //status
 
-        infoCells = infoTable.querySelectorAll("td.info");
-
-        //AUTHOR
-        addCsvString(infoCells[0].innerHTML);
-
-        //ISBN
-        addCsvString(infoCells[1].innerHTML);
-
-        //STATUS
-        addCsvString(infoCells[2].innerHTML);
         csv += "\n";
     }
 
-    // the class is "section no_books" - http://stackoverflow.com/a/6885027
-    var noBooks = document.querySelectorAll("div.section.no_books");
+    // selects <div class="section no_books"> - http://stackoverflow.com/a/6885027
+    var noBooks = $$("div.section.no_books");
 
-    var lenWith = items.length;
+    var lenWith    = items.length;
     var lenWithout = noBooks.length;
-    console.info(lenWith + " books with info, " + lenWithout + " books without info, " + (lenWith + lenWithout) + " total.");
+    console.info(
+        lenWith + " books with info, " + lenWithout + " books without info, " + (lenWith + lenWithout) + " total.");
 
     for (i = 0; i < noBooks.length; i++) {
-        currentItem = noBooks[i];
-        addCsvClassInfo(currentItem.querySelector("h3").innerHTML);
+        addCsvClassInfo(noBooks[i].querySelector("h3").innerHTML);
         csv += "\"No info.\",\"-\",\"-\",\"-\"\n";
     }
 
     writeToStorage(csv)
 }
 
-function addCsvString(string) {
-    csv += "\"" + string + "\",";
-}
 
+/**
+ * Parses a string with all the class info and adds the class department, course number, section number, and professor
+ * to the CSV.
+ *
+ * Example input strings:
+ * "ANTH 102A (01 - RETI)"
+ * "ANTH 100 (01)"
+ *
+ * @param classInfoString
+ */
 function addCsvClassInfo(classInfoString) {
     var split_classInfo, split_dept_courseNum, split_secNum_prof;
-
-    /* parameter classInfoString is like this
-     * e.g. "ANTH 102A (01 - RETI)"
-     * or   "ANTH 100 (01)"      */
 
     split_classInfo = classInfoString.split("(");
     /* e.g. ["ANTH 102A ", "01 - RETI)"]
@@ -82,7 +81,23 @@ function addCsvClassInfo(classInfoString) {
     }
 }
 
+
+/**
+ * Adds a string, surrounded by quotation marks, to the CSV.
+ *
+ * @param string the string to add to the CSV.
+ */
+function addCsvString(string) {
+    csv += "\"" + string + "\",";
+}
+
+/**
+ * Adds the CSV to the array in LocalStorage.
+ *
+ * @param csvToAdd a string of the CSV to store.
+ */
 function writeToStorage(csvToAdd) {
+
     // These functions fake adding any object to Storage. http://stackoverflow.com/a/2010994
     Storage.prototype.setObject = function (key, value) {
         this.setItem(key, JSON.stringify(value));
@@ -90,6 +105,7 @@ function writeToStorage(csvToAdd) {
     Storage.prototype.getObject = function (key) {
         return JSON.parse(this.getItem(key));
     };
+
 
     var existingCsv = localStorage.getObject("csv");
     if (existingCsv == null) {
