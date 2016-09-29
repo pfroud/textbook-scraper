@@ -3,7 +3,7 @@
 Makes a CSV file of every book for every UCSC class, using the [Bay Tree Bookstore's](http://slugstore.ucsc.edu) online
 textbook lookup at http://ucsc.verbacompare.com.
 
-There are 967	books in the [sample output](sample-output.csv), 759 of which have information listed. Two columns to
+There are 967 books in the [sample output](sample-output.csv), 759 of which have information listed. Two columns to
 the right aren't shown in the default view on the GitHub viewer, but you can scroll horizontally.
 
 ## How to use

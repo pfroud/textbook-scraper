@@ -42,7 +42,7 @@ mutObs_dept.observe($("div#department a.chosen-single span")[0], mutObsConfig);
 function startGettingDepts() {
     mutObs_dept.disconnect();
     simulateClick($("div#department span")[0]); // need to click on "Choose a Department..." to populate the <ul>
-    var allDepts = $$("div#department li").slice(1); //slice takes off "Choose a Department..."
+    var allDepts = Array.from(document.querySelectorAll("div#department li")).slice(1); //slice takes off "Choose a Department..."
     getNextDept(allDepts);
 }
 
