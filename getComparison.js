@@ -116,7 +116,7 @@ var numLinks; // Needs to be global so storageCallback can see it. There are way
 function printLinks(courseIDs) {
     // Verbacompare can only compare ~350 books at a time
 
-    courseIDs = courseIDs.slice(0, 20);
+    courseIDs = courseIDs.slice(0, 10);
 
     // const maxBooksPerUrl = 350;
     const maxBooksPerUrl = 10;
@@ -161,6 +161,7 @@ function updateCount(numLinksCurrent, numLinksTotal) {
 function storageCallback(event) {
     //noinspection JSUnresolvedVariable (WebStorm doesn't know about storageEvent.newValue)
     var arrayOfCSVs = JSON.parse(event.newValue);
+    console.log(arrayOfCSVs);
     var len = arrayOfCSVs.length;
 
     updateCount(len, numLinks);
@@ -178,7 +179,7 @@ function storageCallback(event) {
         arrayOfCSVs.forEach(function (csv) {document.write(csv)});
 
         window.removeEventListener("storage", storageCallback);
-        localStorage.clear();
+        // localStorage.clear();
     }
 }
 
