@@ -2,23 +2,29 @@
 
 
 /**
- * Starts going through departments.
+ * Makes an array with every department, then starts mutual recursion between loadCourses() and addCourses().
+ *
+ * @param mutObs_dept the MutationObserver for the menu of departments.
  */
-function startGettingDepts() {
+function startGettingDepts(mutObs_dept) {
     mutObs_dept.disconnect();
-    simulateClick($("div#department span")[0]); // need to click on "Choose a Department..." to populate the <ul>
-    var allDepts = Array.from(document.querySelectorAll("div#department li")).slice(1); //slice takes off "Choose a
-                                                                                        // Department..."
-    getNextDept(allDepts);
+
+    // Need to click on "Choose a Department..." to populate the <ul> with <li>s of departments
+    simulateClick($("div#department span")[0]);
+
+    // Make an array with the name of every department. The slice takes off "Choose a Department..."
+    var allDepts = Array.from($$("div#department li")).slice(1);
+
+    loadCourses(allDepts);
 }
 
 
 /**
- * Gets courses from the next department in allDepts.
+ * Loads courses in the next department in allDepts, then calls addCourses() to add the courses to
  *
  * @param allDepts array of DOM Nodes of <li>s
  */
-function getNextDept(allDepts) {
+function loadCourses(allDepts) {
     if (allDepts.length == 0) {
         printLinks();
         return;
@@ -26,20 +32,24 @@ function getNextDept(allDepts) {
 
     simulateClick(allDepts.shift());
 
-    //set up MutationObserver to call addCoursesFromDept() when triggered
-    mutObs_course = new MutationObserver(function () { addCoursesFromDept(allDepts) });
+    //set up MutationObserver to call addCourses() when triggered
+    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, allDepts) });
+
+    var mutObs_course_target = $("div#course a.chosen-single span")[0];
+    var mutations = {characterData: true, subtree: true};
 
     // Wait for spinner to finish by watching for "Select an Option" to change into "Choose a Course..."
     // noinspection JSCheckFunctionSignatures - WebStorm shows incorrect warning about the config object
-    mutObs_course.observe(mutObs_course_target, mutObsConfig);
+    mutObs_course.observe(mutObs_course_target, mutations);
 }
 
 /**
  * Adds courses from a department into CourseIDs.
  *
  * @param allDepts array of DOM Nodes of <li>s
+ * @param mutObs_course the MutationObserver for the menu of departments.
  */
-function addCoursesFromDept(allDepts) {
+function addCourses(mutObs_course, allDepts) {
     mutObs_course.disconnect();
 
     // var options = $("div#eset option"); // need to wait for sections to load
@@ -55,7 +65,7 @@ function addCoursesFromDept(allDepts) {
 
     if (numBooks == 0) console.warn("Department " + currentOpt.innerHTML + " didn't work.");
 
-    getNextDept(allDepts);
+    loadCourses(allDepts);
 }
 
 var numLinksTotal; // global so storageCallback() can be removed
@@ -147,8 +157,6 @@ function main() {
 
     // stuff for MutationObservers
 
-    var mutObs_course;
-    var mutObs_course_target = $("div#course a.chosen-single span")[0];
 
 
     // example course ID is "SP16__AMS__011A__01"
@@ -161,7 +169,7 @@ function main() {
     // We need to wait for the menu of departments to load before doing anything else. Four steps:
 
     // 1. Make a MutationObserver which will call startGettingDepts() when it's triggered.
-    var mutObs = new MutationObserver(function () { startGettingDepts();});
+    var mutObs_dept = new MutationObserver(function () { startGettingDepts(mutObs_dept);} );
 
     // 2. Specify what kinds of mutations to look for.
     //    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationObserverInit for deets
@@ -172,9 +180,9 @@ function main() {
     var observeTarget = $("div#department a.chosen-single span")[0];
 
     // 4. Start the MutationObserver.
-    //    When the menu of departments is done loading, mutObs calls startGettingDepts().
+    //    When the menu of departments is done loading, mutObs_dept calls startGettingDepts().
     // noinspection JSCheckFunctionSignatures (WebStorm shows a bogus warning about the config object)
-    mutObs.observe(observeTarget, mutations);
+    mutObs_dept.observe(observeTarget, mutations);
 
 
 }
