@@ -23,8 +23,8 @@ function startGettingDepts(mutObs_dept) {
 
 
 /**
- * 1. Simulates a click on the next department in depts;
- * 2. waits for the list of courses in that department to populate;
+ * 1. Simulates a click on the next department in depts, then
+ * 2. waits for the list of courses in that department to populate, then
  * 3. calls addCourses() to add the courses to a currently nonexistent variable called courseIDs.
  *
  * @param {Array} depts - Departments that haven't been processed yet. Each element is an <li> DOM node.
@@ -32,82 +32,84 @@ function startGettingDepts(mutObs_dept) {
  */
 function loadCoursesInNextDept(depts, courseIDs) {
     if (depts.length == 0) {
-        printLinks();
+        printLinks(courseIDs);
         return;
     }
 
-    // shift() changes array in-place
-    simulateClick(depts.shift());
+    simulateClick(depts.shift()); // shift() modifies array in-place
 
     // Wait for the webpage's list of courses to load, then call addCourses().
     // See main() for description of MutationObserver setup.
-    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, depts, courseIDs ) });
+    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, depts, courseIDs) });
     var mutations = {characterData: true, subtree: true};
     var observeTarget = $("div#course a.chosen-single span")[0];
+    //noinspection JSCheckFunctionSignatures (Webstorm gives bogus warning)
     mutObs_course.observe(observeTarget, mutations);
 }
 
 /**
- * Adds courses from a department into CourseIDs.
+ * Adds course IDs in a department to the CourseIDs array,
+ * then calls loadCoursesInNextDept() to advance to the next department.
  *
- * @param {Array} depts - array of DOM Nodes of <li>s
  * @param {MutationObserver} mutObs_course - The MutationObserver that called this function.
- * * @param {Array} courseIDs - Course IDs that we've found so far. Each element is a string.
+ * @param {Array} depts - The array of departments. Only needed here to pass to next call of loadCoursesInNextDept().
+ * @param {Array} courseIDs - Array of course IDs to add more courses to.
  */
 function addCourses(mutObs_course, depts, courseIDs) {
     mutObs_course.disconnect();
 
-    // var options = $("div#eset option"); // need to wait for sections to load
-    var options = $("div#course option");
-    var numBooks = 0;
-    var currentOpt;
+    // Gets all the options in the menu of courses.
+    var tagsToAdd = $("div#course option");
+    // Each element is an <option> tag DOM node, eg <option value="WT17__AMS__005">005</option>
 
-    for (var i = 1; i < options.length; i++) { //index starts at 1 to skip "Choose a Section..."
-        currentOpt = options[i];
-        courseIDs.push(currentOpt.value);
-        numBooks++;
+    // index starts at 1 not 0 to skip "Choose a Section..."
+    for (var i = 1; i < tagsToAdd.length; i++) {
+        courseIDs.push(tagsToAdd[i].value);
     }
-
-    if (numBooks == 0) console.warn("Department " + currentOpt.innerHTML + " didn't work.");
-
     loadCoursesInNextDept(depts, courseIDs);
 }
 
-var numLinksTotal; // global so storageCallback() can be removed
+var numLinks; // needs to be global so storageCallback can see it
 
 /**
- * Prints links to open pages to compare the books.
+ * Divides courseIDs into smaller subsets, then writes links to compare each subset,
+ * then adds an eventListener
+ *
+ * @param {Array} courseIDs - the ID of every course (hopefully)
  */
-function printLinks() {
+function printLinks(courseIDs) {
+    // Verbacompare can only compare ~350 books at a time
     const maxBooksPerUrl = 350;
-    numLinksTotal = Math.ceil(courseIDs.length / maxBooksPerUrl);
+    numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
-    document.write("<body style=\"font-family:sans-serif\">"); //make font not terrible
+    document.write("<body style=\"font-family:sans-serif\">"); // make font tolerable
 
-    var sliced, currentUrl, linkText;
-    for (var i = 0; i < numLinksTotal; i++) {
+    var booksForThisHref, href, linkText;
+    for (var i = 0; i < numLinks; i++) {
 
-        // takes non-overlapping slices of maxBooksPerUrl elements. (i+1)*maxBooksPerUrl doesn't work when i==0
-        sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
+        // take non-overlapping slices of maxBooksPerUrl elements
+        booksForThisHref = courseIDs.slice(i * maxBooksPerUrl, (i + 1) * maxBooksPerUrl);
 
-        currentUrl = "http://ucsc.verbacompare.com/comparison?id=" + sliced.join();
-        linkText = "Link " + (i + 1) + " of " + numLinksTotal;
-        document.write("<p><a href=\"" + currentUrl + "\">" + linkText + "</a></p>");
+        href = "http://ucsc.verbacompare.com/comparison?id=" + booksForThisHref.join();
+        linkText = "Link " + (i + 1) + " of " + numLinks;
+        document.write("<p><a href=\"" + href + "\">" + linkText + "</a></p>");
+        // y'all got any of that string formatting ._.
     }
-    document.write("<div id=\"count\"></div>"); //content added by updateCount()
-    updateCount(0, numLinksTotal);
-    // watchStorageUpdate(numLinksTotal);
+
+    document.write("<div id=\"count\"></div>"); // contents of the <div> are added by updateCount()
+    updateCount(0, numLinks);
 
     window.addEventListener("storage", storageCallback);
-
+    // window.addEventListener("storage", (thing=> storageCallback(0)));
 }
 
 /**
  * Updates the <div id="count"> to display "Found x of y."
  *
- * @param {number} numLinksCurrent -
+ * @param {number} numLinksCurrent - The number of links that have sent data back so far
+ * @param {number} numLinksTotal - The total number of links
  */
-function updateCount(numLinksCurrent) {
+function updateCount(numLinksCurrent, numLinksTotal) {
     $("div#count")[0].innerHTML = "Found " + numLinksCurrent + " of " + numLinksTotal + ".";
 }
 
@@ -118,25 +120,29 @@ function updateCount(numLinksCurrent) {
  * @param {StorageEvent} event - StorageEvent from the event listener
  */
 function storageCallback(event) {
-    // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
-    var arrayOfCSVs = JSON.parse(event.newValue);
+    //noinspection JSUnresolvedVariable (WebStorm doesn't know about storageEvent.newValue)
+    var arrayOfCSVs = JSON.parse(event.newValue); // what is an array of CSVs??
     var len = arrayOfCSVs.length;
 
-    if (len == numLinksTotal) {
-        document.body.innerHTML = ""; // can't set this to "<pre>" because browser automatically closes the tag
+    if (len == numLinks) {
         document.write("<pre>");
 
-        // CSV header and rows
-        document.writeln(
-            "\"Dept\",\"Course num\",\"Section num\",\"Prof\",\"Title\",\"Author\",\"ISBN\",\"Status\"");
-        for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
+        // CSV header
+        var header = ["Dept", "Course num", "Section num", "Prof", "Title", "Author", "ISBN", "Status"];
+        header = header.map(function (str) {return "\"" + str + "\""}); // wrap string in quotes
+        document.writeln(header.join());
 
-        document.write("</pre>");
+        // CSV rows
+        for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
+        // or
+        arrayOfCSVs.forEach(function (x) {document.write(x)}); // see what the hell x actually is
+
+        document.write("</pre>"); // probably not needed????
         window.removeEventListener("storage", storageCallback);
         localStorage.clear();
 
     } else {
-        updateCount(len, numLinksTotal);
+        updateCount(len, numLinks);
     }
 }
 
@@ -180,6 +186,7 @@ function main() {
 
     // 4. Start the MutationObserver.
     //    When the menu of departments is done loading, mutObs_dept calls startGettingDepts().
+    //noinspection JSCheckFunctionSignatures (Webstorm gives bogus warning)
     mutObs_dept.observe(observeTarget, mutations);
 
 
