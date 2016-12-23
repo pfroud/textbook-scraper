@@ -18,3 +18,4 @@ the right aren't shown in the default view on the GitHub viewer, but you can scr
 
 ## Known bugs & future work
 * Only looks for section 01, which is the only option for almost every class.
+* todo - split book title into name, edition and year
