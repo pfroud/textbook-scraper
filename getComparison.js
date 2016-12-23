@@ -1,6 +1,8 @@
 "use strict";
 localStorage.clear();
 
+var numCoursesTable = []; // not sure I will keep this
+
 // Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
 // Instead, we have to send our own mouseover, mousedown, and mouseup events. http://stackoverflow.com/a/24026594
 function triggerMouseEvent(node, eventType) {
@@ -29,6 +31,7 @@ function startGettingDepts(mutObs_dept) {
 
     // Make an array with the name of every department. The slice() takes off "Choose a Department..."
     var depts = Array.from(document.querySelectorAll("div#department li")).slice(1);
+    depts = depts.slice(0, 10);
     // For some reason $$(), which is supposed to be a shortcut for document.querySelectorAll(), doesn't always work
     // even though it's documented right fucking here
     // https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#selector_1
@@ -50,16 +53,21 @@ function startGettingDepts(mutObs_dept) {
  */
 function loadCoursesInNextDept(depts, courseIDs) {
     if (depts.length == 0) {
+        // https://developer.mozilla.org/en-US/docs/Web/API/Console/table
+        // noinspection JSUnresolvedFunction
+        console.table(numCoursesTable);
         printLinks(courseIDs);
         return;
     }
 
-
-    simulateClick(depts.shift()); // shift() modifies array in-place
+    var currentDept = depts.shift();
+    simulateClick(currentDept); // shift() modifies array in-place
 
     // Wait for the webpage's list of courses to load, then call addCourses().
     // See main() for description of MutationObserver setup.
-    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, depts, courseIDs) });
+    var mutObs_course = new MutationObserver(function () {
+        addCourses(mutObs_course, currentDept.innerHTML, depts, courseIDs)
+    });
     var mutations = {characterData: true, subtree: true};
     var observeTarget = $("div#course a.chosen-single span")[0];
     //noinspection JSCheckFunctionSignatures (Webstorm gives bogus warning)
@@ -71,20 +79,27 @@ function loadCoursesInNextDept(depts, courseIDs) {
  * then calls loadCoursesInNextDept() to advance to the next department.
  *
  * @param {MutationObserver} mutObs_course - The MutationObserver that called this function.
+ * @param {String} currentDept - something
  * @param {Array} depts - The array of departments. Only needed here to pass to next call of loadCoursesInNextDept().
  * @param {Array} courseIDs - Array of course IDs to add more courses to.
  */
-function addCourses(mutObs_course, depts, courseIDs) {
+function addCourses(mutObs_course, currentDept, depts, courseIDs) {
     mutObs_course.disconnect();
 
     // Gets all the options in the menu of courses.
     var tagsToAdd = $("div#course option");
     // Each element is an <option> tag DOM node, eg <option value="WT17__AMS__005">005</option>
 
+    var numTags = tagsToAdd.length;
+
     // index starts at 1 not 0 to skip "Choose a Section..."
-    for (var i = 1; i < tagsToAdd.length; i++) {
+    for (var i = 1; i < numTags; i++) {
         courseIDs.push(tagsToAdd[i].value);
     }
+
+    numCoursesTable.push({"Department": currentDept, "Number of courses": numTags});
+
+
     loadCoursesInNextDept(depts, courseIDs);
 }
 
@@ -159,8 +174,7 @@ function storageCallback(event) {
         document.writeln(header.join());
 
         // CSV rows
-        for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
-        // or
+        // for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
         arrayOfCSVs.forEach(function (x) {document.write(x)}); // see what the hell x actually is
 
         window.removeEventListener("storage", storageCallback);
