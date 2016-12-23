@@ -34,7 +34,6 @@ function startGettingDepts(mutObs_dept) {
 
     // Make an array with the name of every department. The slice() takes off "Choose a Department..."
     var depts = Array.from(document.querySelectorAll("div#department li")).slice(1);
-    depts = depts.slice(0, 10);
     // For some reason $$(), which is supposed to be a shortcut for document.querySelectorAll(),
     // doesn't always work even though it's documented right fucking here:
     // https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#selector_1
@@ -115,11 +114,7 @@ var numLinks; // Needs to be global so storageCallback can see it. There are way
  */
 function printLinks(courseIDs) {
     // Verbacompare can only compare ~350 books at a time
-
-    courseIDs = courseIDs.slice(0, 10);
-
-    // const maxBooksPerUrl = 350;
-    const maxBooksPerUrl = 10;
+    const maxBooksPerUrl = 200; // but maybe less than 350...
     numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); // make font tolerable
@@ -179,7 +174,7 @@ function storageCallback(event) {
         arrayOfCSVs.forEach(function (csv) {document.write(csv)});
 
         window.removeEventListener("storage", storageCallback);
-        // localStorage.clear();
+        localStorage.clear();
     }
 }
 
