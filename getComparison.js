@@ -1,39 +1,4 @@
-/**
- * Gets every book on http://ucsc.verbacompare.com, prints links to open pages to compare them, and watches for results
- * to come in from those pages.
- */
 "use strict";
-
-// Verbacompare uses a bunch of listeners, so .click() doesn't work. Functions from http://stackoverflow.com/a/24026594
-function triggerMouseEvent(node, eventType) {
-    var clickEvent = document.createEvent('MouseEvents');
-    clickEvent.initEvent(eventType, true, true);
-    node.dispatchEvent(clickEvent);
-}
-function simulateClick(targetNode) {
-    triggerMouseEvent(targetNode, "mouseover");
-    triggerMouseEvent(targetNode, "mousedown");
-    triggerMouseEvent(targetNode, "mouseup");
-    triggerMouseEvent(targetNode, "click");
-}
-
-// stuff for MutationObservers
-var mutObs_dept;
-var mutObs_course;
-var mutObs_course_target = $("div#course a.chosen-single span")[0];
-var mutObsConfig         = {characterData: true, subtree: true};
-
-var courseIDs = []; // example course ID is "SP16__AMS__011A__01"
-
-simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load terms
-simulateClick($("div#term li")[1]); // click on "SPRING 2016"
-
-//set up MutationObserver to call startGettingDepts() when triggered
-mutObs_dept = new MutationObserver(function () { startGettingDepts();});
-
-// Wait for spinner to finish by watching for "Select an Option" to change into "Choose a Department..."
-// noinspection JSCheckFunctionSignatures - WebStorm shows incorrect warning about the config object
-mutObs_dept.observe($("div#department a.chosen-single span")[0], mutObsConfig);
 
 
 /**
@@ -42,7 +7,8 @@ mutObs_dept.observe($("div#department a.chosen-single span")[0], mutObsConfig);
 function startGettingDepts() {
     mutObs_dept.disconnect();
     simulateClick($("div#department span")[0]); // need to click on "Choose a Department..." to populate the <ul>
-    var allDepts = Array.from(document.querySelectorAll("div#department li")).slice(1); //slice takes off "Choose a Department..."
+    var allDepts = Array.from(document.querySelectorAll("div#department li")).slice(1); //slice takes off "Choose a
+                                                                                        // Department..."
     getNextDept(allDepts);
 }
 
@@ -77,7 +43,7 @@ function addCoursesFromDept(allDepts) {
     mutObs_course.disconnect();
 
     // var options = $("div#eset option"); // need to wait for sections to load
-    var options  = $("div#course option");
+    var options = $("div#course option");
     var numBooks = 0;
     var currentOpt;
 
@@ -99,7 +65,7 @@ var numLinksTotal; // global so storageCallback() can be removed
  */
 function printLinks() {
     const maxBooksPerUrl = 350;
-    numLinksTotal        = Math.ceil(courseIDs.length / maxBooksPerUrl);
+    numLinksTotal = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); //make font not terrible
 
@@ -110,7 +76,7 @@ function printLinks() {
         sliced = courseIDs.slice(i * maxBooksPerUrl, i * maxBooksPerUrl + maxBooksPerUrl);
 
         currentUrl = "http://ucsc.verbacompare.com/comparison?id=" + sliced.join();
-        linkText   = "Link " + (i + 1) + " of " + numLinksTotal;
+        linkText = "Link " + (i + 1) + " of " + numLinksTotal;
         document.write("<p><a href=\"" + currentUrl + "\">" + linkText + "</a></p>");
     }
     document.write("<div id=\"count\"></div>"); //content added by updateCount()
@@ -138,7 +104,7 @@ function updateCount(numLinksCurrent) {
 function storageCallback(event) {
     // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
     var arrayOfCSVs = JSON.parse(event.newValue);
-    var len         = arrayOfCSVs.length;
+    var len = arrayOfCSVs.length;
 
     if (len == numLinksTotal) {
         document.body.innerHTML = ""; // can't set this to "<pre>" because browser automatically closes the tag
@@ -157,3 +123,60 @@ function storageCallback(event) {
         updateCount(len, numLinksTotal);
     }
 }
+
+/**
+ * Gets every book on http://ucsc.verbacompare.com, prints links to open pages to compare them, and watches for results
+ * to come in from those pages.
+ */
+function main() {
+
+    // Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
+    // Instead, we have to send our own mouseover, mousedown, and mouseup events. http://stackoverflow.com/a/24026594
+    function triggerMouseEvent(node, eventType) {
+        var event = document.createEvent('MouseEvents');
+        event.initEvent(eventType, true, true);
+        node.dispatchEvent(event);
+    }
+
+    function simulateClick(node) {
+        triggerMouseEvent(node, "mouseover");
+        triggerMouseEvent(node, "mousedown");
+        triggerMouseEvent(node, "mouseup");
+        triggerMouseEvent(node, "click");
+    }
+
+    // stuff for MutationObservers
+
+    var mutObs_course;
+    var mutObs_course_target = $("div#course a.chosen-single span")[0];
+
+
+    // example course ID is "SP16__AMS__011A__01"
+    var courseIDs = [];
+
+    simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load terms
+    simulateClick($("div#term li")[1]); // click on the current term
+
+
+    // We need to wait for the menu of departments to load before doing anything else. Four steps:
+
+    // 1. Make a MutationObserver which will call startGettingDepts() when it's triggered.
+    var mutObs = new MutationObserver(function () { startGettingDepts();});
+
+    // 2. Specify what kinds of mutations to look for.
+    //    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationObserverInit for deets
+    var mutations = {characterData: true, subtree: true};
+
+    // 3. Get a DOM element to watch for mutations.
+    //    The element chosen here is the <span>Select an Option</span> in the second menu.
+    var observeTarget = $("div#department a.chosen-single span")[0];
+
+    // 4. Start the MutationObserver.
+    //    When the menu of departments is done loading, mutObs calls startGettingDepts().
+    // noinspection JSCheckFunctionSignatures (WebStorm shows a bogus warning about the config object)
+    mutObs.observe(observeTarget, mutations);
+
+
+}
+
+main();
