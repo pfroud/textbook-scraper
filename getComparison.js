@@ -2,9 +2,9 @@
 
 
 /**
- * Makes an array with every department, then starts mutual recursion between loadCourses() and addCourses().
+ * Makes an array with every department, then starts mutual recursion between loadCoursesInNextDept() and addCourses().
  *
- * @param mutObs_dept the MutationObserver for the menu of departments.
+ * @param {MutationObserver} mutObs_dept - The MutationObserver that called this function.
  */
 function startGettingDepts(mutObs_dept) {
     mutObs_dept.disconnect();
@@ -12,44 +12,49 @@ function startGettingDepts(mutObs_dept) {
     // Need to click on "Choose a Department..." to populate the <ul> with <li>s of departments
     simulateClick($("div#department span")[0]);
 
-    // Make an array with the name of every department. The slice takes off "Choose a Department..."
-    var allDepts = Array.from($$("div#department li")).slice(1);
+    // Make an array with the name of every department. The slice() takes off "Choose a Department..."
+    var depts = Array.from($$("div#department li")).slice(1);
 
-    loadCourses(allDepts);
+    // This array will be filled with course IDs. Example course ID is "SP16__AMS__011A__01"
+    var courseIDs = [];
+
+    loadCoursesInNextDept(depts, courseIDs);
 }
 
 
 /**
- * Loads courses in the next department in allDepts, then calls addCourses() to add the courses to
+ * 1. Simulates a click on the next department in depts;
+ * 2. waits for the list of courses in that department to populate;
+ * 3. calls addCourses() to add the courses to a currently nonexistent variable called courseIDs.
  *
- * @param allDepts array of DOM Nodes of <li>s
+ * @param {Array} depts - Departments that haven't been processed yet. Each element is an <li> DOM node.
+ * @param {Array} courseIDs - Course IDs that we've found so far. Each element is a string.
  */
-function loadCourses(allDepts) {
-    if (allDepts.length == 0) {
+function loadCoursesInNextDept(depts, courseIDs) {
+    if (depts.length == 0) {
         printLinks();
         return;
     }
 
-    simulateClick(allDepts.shift());
+    // shift() changes array in-place
+    simulateClick(depts.shift());
 
-    //set up MutationObserver to call addCourses() when triggered
-    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, allDepts) });
-
-    var mutObs_course_target = $("div#course a.chosen-single span")[0];
+    // Wait for the webpage's list of courses to load, then call addCourses().
+    // See main() for description of MutationObserver setup.
+    var mutObs_course = new MutationObserver(function () { addCourses(mutObs_course, depts, courseIDs ) });
     var mutations = {characterData: true, subtree: true};
-
-    // Wait for spinner to finish by watching for "Select an Option" to change into "Choose a Course..."
-    // noinspection JSCheckFunctionSignatures - WebStorm shows incorrect warning about the config object
-    mutObs_course.observe(mutObs_course_target, mutations);
+    var observeTarget = $("div#course a.chosen-single span")[0];
+    mutObs_course.observe(observeTarget, mutations);
 }
 
 /**
  * Adds courses from a department into CourseIDs.
  *
- * @param allDepts array of DOM Nodes of <li>s
- * @param mutObs_course the MutationObserver for the menu of departments.
+ * @param {Array} depts - array of DOM Nodes of <li>s
+ * @param {MutationObserver} mutObs_course - The MutationObserver that called this function.
+ * * @param {Array} courseIDs - Course IDs that we've found so far. Each element is a string.
  */
-function addCourses(mutObs_course, allDepts) {
+function addCourses(mutObs_course, depts, courseIDs) {
     mutObs_course.disconnect();
 
     // var options = $("div#eset option"); // need to wait for sections to load
@@ -65,7 +70,7 @@ function addCourses(mutObs_course, allDepts) {
 
     if (numBooks == 0) console.warn("Department " + currentOpt.innerHTML + " didn't work.");
 
-    loadCourses(allDepts);
+    loadCoursesInNextDept(depts, courseIDs);
 }
 
 var numLinksTotal; // global so storageCallback() can be removed
@@ -100,16 +105,17 @@ function printLinks() {
 /**
  * Updates the <div id="count"> to display "Found x of y."
  *
- * @param numLinksCurrent how many results we currently have
+ * @param {number} numLinksCurrent -
  */
 function updateCount(numLinksCurrent) {
     $("div#count")[0].innerHTML = "Found " + numLinksCurrent + " of " + numLinksTotal + ".";
 }
 
+// noinspection JSValidateJSDoc (WebStorm doesn't know about StorageEvent)
 /**
  * If we have all the results, display the CSV; otherwise, update the count.
  *
- * @param event StorageEvent from the event listener
+ * @param {StorageEvent} event - StorageEvent from the event listener
  */
 function storageCallback(event) {
     // Need JSON.parse() because written by setObject(). See writeToStorage() in readComparison.js
@@ -155,21 +161,14 @@ function main() {
         triggerMouseEvent(node, "click");
     }
 
-    // stuff for MutationObservers
-
-
-
-    // example course ID is "SP16__AMS__011A__01"
-    var courseIDs = [];
-
     simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load terms
     simulateClick($("div#term li")[1]); // click on the current term
 
 
     // We need to wait for the menu of departments to load before doing anything else. Four steps:
 
-    // 1. Make a MutationObserver which will call startGettingDepts() when it's triggered.
-    var mutObs_dept = new MutationObserver(function () { startGettingDepts(mutObs_dept);} );
+    // 1. Make a MutationObserver which will call startGettingDepts() when triggered.
+    var mutObs_dept = new MutationObserver(function () { startGettingDepts(mutObs_dept);});
 
     // 2. Specify what kinds of mutations to look for.
     //    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationObserverInit for deets
@@ -181,7 +180,6 @@ function main() {
 
     // 4. Start the MutationObserver.
     //    When the menu of departments is done loading, mutObs_dept calls startGettingDepts().
-    // noinspection JSCheckFunctionSignatures (WebStorm shows a bogus warning about the config object)
     mutObs_dept.observe(observeTarget, mutations);
 
 
