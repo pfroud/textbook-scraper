@@ -1,5 +1,20 @@
 "use strict";
+localStorage.clear();
 
+// Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
+// Instead, we have to send our own mouseover, mousedown, and mouseup events. http://stackoverflow.com/a/24026594
+function triggerMouseEvent(node, eventType) {
+    var event = document.createEvent('MouseEvents');
+    event.initEvent(eventType, true, true);
+    node.dispatchEvent(event);
+}
+
+function simulateClick(node) {
+    triggerMouseEvent(node, "mouseover");
+    triggerMouseEvent(node, "mousedown");
+    triggerMouseEvent(node, "mouseup");
+    triggerMouseEvent(node, "click");
+}
 
 /**
  * Makes an array with every department, then starts mutual recursion between loadCoursesInNextDept() and addCourses().
@@ -13,7 +28,10 @@ function startGettingDepts(mutObs_dept) {
     simulateClick($("div#department span")[0]);
 
     // Make an array with the name of every department. The slice() takes off "Choose a Department..."
-    var depts = Array.from($$("div#department li")).slice(1);
+    var depts = Array.from(document.querySelectorAll("div#department li")).slice(1);
+    // For some reason $$(), which is supposed to be a shortcut for document.querySelectorAll(), doesn't always work
+    // even though it's documented right fucking here
+    // https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#selector_1
 
     // This array will be filled with course IDs. Example course ID is "SP16__AMS__011A__01"
     var courseIDs = [];
@@ -35,6 +53,7 @@ function loadCoursesInNextDept(depts, courseIDs) {
         printLinks(courseIDs);
         return;
     }
+
 
     simulateClick(depts.shift()); // shift() modifies array in-place
 
@@ -79,7 +98,11 @@ var numLinks; // needs to be global so storageCallback can see it
  */
 function printLinks(courseIDs) {
     // Verbacompare can only compare ~350 books at a time
-    const maxBooksPerUrl = 350;
+
+    courseIDs = courseIDs.slice(0, 20);
+
+    // const maxBooksPerUrl = 350;
+    const maxBooksPerUrl = 10;
     numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); // make font tolerable
@@ -124,7 +147,10 @@ function storageCallback(event) {
     var arrayOfCSVs = JSON.parse(event.newValue); // what is an array of CSVs??
     var len = arrayOfCSVs.length;
 
+    updateCount(len, numLinks);
+
     if (len == numLinks) {
+        document.body.innerHTML = "";
         document.write("<pre>");
 
         // CSV header
@@ -137,12 +163,8 @@ function storageCallback(event) {
         // or
         arrayOfCSVs.forEach(function (x) {document.write(x)}); // see what the hell x actually is
 
-        document.write("</pre>"); // probably not needed????
         window.removeEventListener("storage", storageCallback);
         localStorage.clear();
-
-    } else {
-        updateCount(len, numLinks);
     }
 }
 
@@ -151,25 +173,8 @@ function storageCallback(event) {
  * to come in from those pages.
  */
 function main() {
-
-    // Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
-    // Instead, we have to send our own mouseover, mousedown, and mouseup events. http://stackoverflow.com/a/24026594
-    function triggerMouseEvent(node, eventType) {
-        var event = document.createEvent('MouseEvents');
-        event.initEvent(eventType, true, true);
-        node.dispatchEvent(event);
-    }
-
-    function simulateClick(node) {
-        triggerMouseEvent(node, "mouseover");
-        triggerMouseEvent(node, "mousedown");
-        triggerMouseEvent(node, "mouseup");
-        triggerMouseEvent(node, "click");
-    }
-
     simulateClick($("div#term span")[0]); // click on "Choose a Term..." to load terms
     simulateClick($("div#term li")[1]); // click on the current term
-
 
     // We need to wait for the menu of departments to load before doing anything else. Four steps:
 
