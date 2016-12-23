@@ -1,22 +1,25 @@
 "use strict";
 localStorage.clear();
 
-var numCoursesTable = []; // not sure I will keep this
+var numCoursesTable = []; // not sure I will keep this. If I do, I'll make it not global.
 
-// Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
-// Instead, we have to send our own mouseover, mousedown, and mouseup events. http://stackoverflow.com/a/24026594
-function triggerMouseEvent(node, eventType) {
-    var event = document.createEvent('MouseEvents');
-    event.initEvent(eventType, true, true);
-    node.dispatchEvent(event);
-}
-
+/**
+ * Verbacompare uses several mouse event listeners, so JavaScript's click() function doesn't do anything.
+ * Instead, we have to send our own mouseover, mousedown, and mouseup events.
+ * http://stackoverflow.com/a/24026594
+ */
 function simulateClick(node) {
     triggerMouseEvent(node, "mouseover");
     triggerMouseEvent(node, "mousedown");
     triggerMouseEvent(node, "mouseup");
     triggerMouseEvent(node, "click");
 }
+function triggerMouseEvent(node, eventType) {
+    var event = document.createEvent('MouseEvents');
+    event.initEvent(eventType, true, true);
+    node.dispatchEvent(event);
+}
+
 
 /**
  * Makes an array with every department, then starts mutual recursion between loadCoursesInNextDept() and addCourses().
@@ -32,8 +35,8 @@ function startGettingDepts(mutObs_dept) {
     // Make an array with the name of every department. The slice() takes off "Choose a Department..."
     var depts = Array.from(document.querySelectorAll("div#department li")).slice(1);
     depts = depts.slice(0, 10);
-    // For some reason $$(), which is supposed to be a shortcut for document.querySelectorAll(), doesn't always work
-    // even though it's documented right fucking here
+    // For some reason $$(), which is supposed to be a shortcut for document.querySelectorAll(),
+    // doesn't always work even though it's documented right fucking here:
     // https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#selector_1
 
     // This array will be filled with course IDs. Example course ID is "SP16__AMS__011A__01"
@@ -99,11 +102,10 @@ function addCourses(mutObs_course, currentDept, depts, courseIDs) {
 
     numCoursesTable.push({"Department": currentDept, "Number of courses": numTags});
 
-
     loadCoursesInNextDept(depts, courseIDs);
 }
 
-var numLinks; // needs to be global so storageCallback can see it
+var numLinks; // Needs to be global so storageCallback can see it. There are ways around this but it's gross.
 
 /**
  * Divides courseIDs into smaller subsets, then writes links to compare each subset,
@@ -138,7 +140,6 @@ function printLinks(courseIDs) {
     updateCount(0, numLinks);
 
     window.addEventListener("storage", storageCallback);
-    // window.addEventListener("storage", (thing=> storageCallback(0)));
 }
 
 /**
@@ -159,7 +160,7 @@ function updateCount(numLinksCurrent, numLinksTotal) {
  */
 function storageCallback(event) {
     //noinspection JSUnresolvedVariable (WebStorm doesn't know about storageEvent.newValue)
-    var arrayOfCSVs = JSON.parse(event.newValue); // what is an array of CSVs??
+    var arrayOfCSVs = JSON.parse(event.newValue);
     var len = arrayOfCSVs.length;
 
     updateCount(len, numLinks);
@@ -174,8 +175,7 @@ function storageCallback(event) {
         document.writeln(header.join());
 
         // CSV rows
-        // for (var i = 0; i < len; i++) document.write(arrayOfCSVs[i]);
-        arrayOfCSVs.forEach(function (x) {document.write(x)}); // see what the hell x actually is
+        arrayOfCSVs.forEach(function (csv) {document.write(csv)});
 
         window.removeEventListener("storage", storageCallback);
         localStorage.clear();
