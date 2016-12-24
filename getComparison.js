@@ -95,9 +95,9 @@ function addCourses(mutObs_course, currentDept, depts, courseIDs) {
     var numTags = tagsToAdd.length;
 
     // index starts at 1 not 0 to skip "Choose a Section..."
-    for (var i = 1; i < numTags; i++) {
-        courseIDs.push(tagsToAdd[i].value);
-    }
+    tagsToAdd.forEach(function (tag) {
+        courseIDs.push(tag);
+    });
 
     numCoursesTable.push({"Department": currentDept, "Number of courses": numTags});
 

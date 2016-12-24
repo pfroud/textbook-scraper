@@ -7,16 +7,14 @@ var csv = ""; //fuck it, make it global
  */
 function main() {
     var books = $$("div.item_details"); // for some reason, $() works here
-    var currentBook, infoTable, infoCells;
+    var infoTable, infoCells;
 
-    for (var i = 0; i < books.length; i++) {
-        currentBook = books[i];
-
+    books.forEach(function (book) {
         // class info - department, course number, section number, professor
-        addCsvClassInfo(currentBook.querySelector("div.in_section span").innerHTML);
+        addCsvClassInfo(book.querySelector("div.in_section span").innerHTML);
 
         // this table has everything else
-        infoTable = currentBook.querySelector("td.book_info");
+        infoTable = book.querySelector("td.book_info");
         addCsvString(infoTable.querySelector("td.title").innerHTML.trim()); // title
 
         // now these cells have everything else
@@ -26,16 +24,16 @@ function main() {
         addCsvString(infoCells[2].innerHTML, true); //status
 
         csv += "\n";
-    }
+    });
 
     // These books are listed on Verbacompare, but Verbacompare doesn't have any info about them.
     // selects <div class="section no_books"> - http://stackoverflow.com/a/6885027
     var noBooks = $$("div.section.no_books");
 
-    for (i = 0; i < noBooks.length; i++) {
-        addCsvClassInfo(noBooks[i].querySelector("h3").innerHTML);
+    noBooks.forEach(function (book) {
+        addCsvClassInfo(book.querySelector("h3").innerHTML);
         csv += "\"No info.\",\"-\",\"-\",\"-\"\n";
-    }
+    });
 
     var lenWith = books.length;
     var lenWithout = noBooks.length;
