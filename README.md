@@ -18,5 +18,8 @@ the right aren't shown in the default view on the GitHub viewer, but you can scr
 1. Save / paste into a spreadsheet program.
 
 ## Known bugs & future work
-* Only looks for section 01, which is the only option for almost every class.
+* Potentially a bug - only looks for section 01, which is the only option for almost every class.
 * Add feature - split book title into name, edition and year
+* Refactor - send GET requests to deal with the dropdown menus, instead of simulating a click on the menu.
+    * example of department: [/compare/courses/?id=WT17__AMS&term_id=21818](http://ucsc.verbacompare.com/compare/courses/?id=WT17__AMS&term_id=21818)
+    * example of course: [/compare/sections/?id=WT17__AMS__005&term_id=21818](http://ucsc.verbacompare.com/compare/sections/?id=WT17__AMS__005&term_id=21818)
