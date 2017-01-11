@@ -6,7 +6,7 @@ var csv = ""; //fuck it, make it global
  * Reads information about every book on the page, then adds the info as comma-separated values to Storage.
  */
 function main() {
-    var books = $$("div.item_details"); // for some reason, $() works here
+    var books = $$("div.item_details"); // for some reason, $$() works here
     var infoTable, infoCells;
 
     books.forEach(function (book) {
@@ -15,7 +15,7 @@ function main() {
 
         // this table has everything else
         infoTable = book.querySelector("td.book_info");
-        addCsvString(infoTable.querySelector("td.title").innerHTML.trim()); // title
+        addCsvBookTitle(infoTable.querySelector("td.title").innerHTML.trim());
 
         // now these cells have everything else
         infoCells = infoTable.querySelectorAll("td.info");
@@ -32,7 +32,7 @@ function main() {
 
     noBooks.forEach(function (book) {
         addCsvClassInfo(book.querySelector("h3").innerHTML);
-        csv += "\"No info.\",\"-\",\"-\",\"-\"\n";
+        csv += "\"null\", \"null\", \"null\", \"null\", \"null\", \"null\"\n";
     });
 
     var lenWith = books.length;
@@ -75,10 +75,21 @@ function addCsvClassInfo(classInfoString) {
     if (split_secNum_prof.length > 1) {
         addCsvString(split_secNum_prof[1].replace(/\)$/, "")); //professor
     } else {
-        addCsvString("-"); //professor
+        addCsvString("null"); //professor
     }
 }
 
+/**
+ *
+ * @param {String} title
+ */
+function addCsvBookTitle(title){
+    var split = title.split(/Ed:|Yr:/);
+    addCsvString(split[0].trim()); // the actual book title
+    addCsvString(split[1].toLowerCase().split(" ").join("")); // edition. No built-in way to replace all substrings.
+    addCsvString(split[2]); // year
+
+}
 
 /**
  * Adds a string, surrounded by quotation marks, to the CSV.
@@ -88,11 +99,11 @@ function addCsvClassInfo(classInfoString) {
  */
 function addCsvString(string, last) {
     csv += "\"" + string + "\"";
-    if (!last) csv += ",";
+    if (!last) csv += ", ";
 }
 
 /**
- * Adds the CSV to the array in LocalStorage.
+ * Adds the CSV string to the array in LocalStorage.
  */
 function writeToStorage() {
 

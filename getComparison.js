@@ -89,22 +89,18 @@ function addCourses(mutObs_course, currentDept, depts, courseIDs) {
     mutObs_course.disconnect();
 
     // Gets all the options in the menu of courses.
-    var tagsToAdd = $("div#course option");
+    var tagsToAdd = Array.from(document.querySelectorAll("div#course option")).slice(1);  //skip "Choose a Course..."
     // Each element is an <option> tag DOM node, eg <option value="WT17__AMS__005">005</option>
 
     var numTags = tagsToAdd.length;
-
-    // index starts at 1 not 0 to skip "Choose a Section..."
-    tagsToAdd.forEach(function (tag) {
-        courseIDs.push(tag);
-    });
+    tagsToAdd.forEach(function (tag) {courseIDs.push(tag.value)});
 
     numCoursesTable.push({"Department": currentDept, "Number of courses": numTags});
 
     loadCoursesInNextDept(depts, courseIDs);
 }
 
-var numLinks; // Needs to be global so storageCallback can see it. There are ways around this but it's gross.
+var numLinks; // Global so storageCallback can see it. There are ways around this but it's gross.
 
 /**
  * Divides courseIDs into smaller subsets, then writes links to compare each subset,
@@ -114,14 +110,13 @@ var numLinks; // Needs to be global so storageCallback can see it. There are way
  */
 function printLinks(courseIDs) {
     // Verbacompare can only compare ~350 books at a time
-    const maxBooksPerUrl = 200; // but maybe less than 350...
+    const maxBooksPerUrl = 150; // but maybe less than 350...
     numLinks = Math.ceil(courseIDs.length / maxBooksPerUrl);
 
     document.write("<body style=\"font-family:sans-serif\">"); // make font tolerable
 
     var booksForThisHref, href, linkText;
     for (var i = 0; i < numLinks; i++) {
-
         // take non-overlapping slices of maxBooksPerUrl elements
         booksForThisHref = courseIDs.slice(i * maxBooksPerUrl, (i + 1) * maxBooksPerUrl);
 
@@ -149,6 +144,7 @@ function updateCount(numLinksCurrent, numLinksTotal) {
 
 // noinspection JSValidateJSDoc (WebStorm doesn't know about StorageEvent)
 /**
+ * Results are stored as an array of strings. Each string contains CSV rows seperated by \n.
  * If we have all the results, display the CSV; otherwise, update the count.
  *
  * @param {StorageEvent} event - StorageEvent from the event listener
@@ -166,7 +162,8 @@ function storageCallback(event) {
         document.write("<pre>");
 
         // CSV header
-        var header = ["Dept", "Course num", "Section num", "Prof", "Title", "Author", "ISBN", "Status"];
+        var header = ["Dept", "Course num", "Section num", "Prof", "Title", "Edition", "Year", "Author", "ISBN",
+            "Status"];
         header = header.map(function (str) {return "\"" + str + "\""}); // wrap string in quotes
         document.writeln(header.join());
 
