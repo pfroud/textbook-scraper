@@ -18,7 +18,12 @@ the right aren't shown in the default view on the GitHub viewer, but you can scr
 1. Save / paste into a spreadsheet program.
 
 ## Known bugs & future work
-* Potentially a bug - only looks for section 01, which is the only option for almost every class.
 * Refactor - send GET requests to deal with the dropdown menus, instead of simulating a click on the menu.
     * example of department: [/compare/courses/?id=WT17__AMS&term_id=21818](http://ucsc.verbacompare.com/compare/courses/?id=WT17__AMS&term_id=21818)
     * example of course: [/compare/sections/?id=WT17__AMS__005&term_id=21818](http://ucsc.verbacompare.com/compare/sections/?id=WT17__AMS__005&term_id=21818)
+
+A server-side bug: if you get a message that says
+
+> Thanks For Stopping By! Unfortunately, comparison textbook shopping is currently unavailable at this address. Shopping for this term may be on its way, or it may have already passed.
+
+it means one of the classes in the URL breaks Verbacompare. Currently, the only class to cause this is [Music 30B](http://ucsc.verbacompare.com/comparison?id=WT17__MUSC__030B), even though [it is a real class](http://registrar.ucsc.edu/catalog/programs-courses/course-descriptions/musc.html).
